@@ -1,0 +1,136 @@
+import requests
+WEBEX_BASE_URL = 'https://webexapis.com/v1'
+
+def main():
+    
+
+    print("Welcome To WEBEX Troubleshoot Tool")
+    token = input("Enter your Webex Access Token: ").strip()
+    test_connection(token)
+
+    while True:
+        print("\n\nMenu:")
+        print("0. Test connection")
+        print("1. Display user information")
+        print("2. Display rooms")
+        print("3. Create a room")
+        print("4. Send message to a room")
+        print("5. Exit")
+
+        choice = int(input("Enter your choice: "))
+
+        if choice == 0:
+            test_connection(token)
+        elif choice == 1:
+            display_user_info(token)
+        elif choice == 2:
+            display_rooms(token)
+        elif choice == 3:
+            create_room(token)
+        elif choice == 4:
+            send_message_to_room(token)
+        elif choice == 5:
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+def test_connection(token):
+    try:
+        url = f'{WEBEX_BASE_URL}/people/me'
+        headers = {'Authorization' : f'Bearer {token}'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        print("Connection test to Webex successful!")
+    except requests.exceptions.RequestException as e:
+        print(f"Connection test to Webex failed: {e}")
+
+    input("\nPress Enter to return to the menu...")
+
+def display_user_info(token):
+    try:
+        url = f'{WEBEX_BASE_URL}/people/me'
+        headers = {'Authorization' : f'Bearer {token}'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        person = response.json()
+        print("\nUser Information:")
+        print("Display Name:", person["displayName"])
+        print("Nickname:", person["nickName"])
+        print("Emails:", person["emails"])
+    except Exception as e:
+        print("\nError:", str(e))
+
+    input("\nPress Enter to return to the menu...")
+
+def display_rooms(token):
+    try:
+        url = f'{WEBEX_BASE_URL}/rooms'
+        headers = {'Authorization' : f'Bearer {token}'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        rooms = response.json()
+        print("\nRooms:")
+        for room in rooms['items']:
+            print("Room ID:", room["id"])
+            print("Room Title:", room["title"])
+            print("Date Created:", room["created"])
+            print("Last Activity:", room["lastActivity"])
+            print("------------------------------")
+    except Exception as e:
+        print("\nError:", str(e))
+
+    input("\nPress Enter to return to the menu...")
+
+def create_room(token):
+    
+
+    try:
+        url = f'{WEBEX_BASE_URL}/rooms'
+        headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+        room_title = input("Enter room title: ")
+        data = {'title': room_title}
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        print("Room created successfully!")
+    except Exception as e:
+        print("\nError:", str(e))
+
+    input("\nPress Enter to return to the menu...")
+
+def send_message_to_room(token):
+    try:
+        # Get list of rooms
+        url = f'{WEBEX_BASE_URL}/rooms'
+        headers = {'Authorization' : f'Bearer {token}', 'Content-Type' : 'application/json'}
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+
+        # Display list of rooms
+        rooms = response.json()
+        print("\nRooms:")
+        for index, room in enumerate(rooms['items'], start=1):
+            print(f"{index}. Room ID: {room['id']}, Room Title: {room['title']}")
+
+        # Prompt user to select a room
+        room_index = int(input("\nChoose a room to send a message to (Enter the index): "))
+
+        # Get selected room
+        selected_room_id = rooms['items'][room_index - 1]['id']
+
+        # Send message
+        message = input("\nEnter your message: ")
+        url = f'{WEBEX_BASE_URL}/messages'
+        headers = {'Authorization' : f'Bearer {token}', 'Content-Type' : 'application/json'}
+        data = {'roomId': selected_room_id, 'text': message}
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        print("Message sent successfully!")
+    except Exception as e:
+        print("\nError:", str(e))
+
+    input("\nPress Enter to return to the menu...")
+
+if __name__ == "__main__":
+    main()
